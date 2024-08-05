@@ -4,7 +4,6 @@ use nalgebra::{*};
 mod renderer;
 fn main() {
     let size = termsize::get().unwrap();
-    println!("{:?}", size);
     let mut renderer = Renderer::new(1.0, 20.0, size.rows, size.cols);
 
     let mut elements = create_toroid(0.4, 0.3, 30, 100);
