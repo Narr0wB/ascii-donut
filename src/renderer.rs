@@ -13,53 +13,6 @@ pub struct Renderer {
     framebuffer: Vec<u8>
 }
 
-
-pub fn map_range(i: u32, max: u32, range_start: f32, range_end: f32) -> f32 {
-    (range_end - range_start) * (i as f32 / max as f32)
-}
-
-pub fn create_toroid(hole_radius: f32, thickness_radius: f32, resolution: u32, resolution2: u32) -> Vec<(Vector3<f32>, Vector3<f32>)> {
-    let mut result = vec![];
-
-    let internal_radius = hole_radius + thickness_radius;
-
-    for i in 0..resolution2 {
-        let theta = map_range(i, resolution2, 0.0, 2.0 * std::f32::consts::PI);
-        let rotation = Rotation3::from_axis_angle(&Vector3::y_axis(), theta);
-
-        for j in 0..resolution {
-            let phi = map_range(j, resolution, 0.0, 2.0 * std::f32::consts::PI);
-
-            let circle = Vector3::new(internal_radius + thickness_radius * phi.sin(), thickness_radius * phi.cos(), 0.0);
-            let normal = Vector3::new(phi.sin(), phi.cos(), 0.0);
-            
-            result.push((rotation.transform_vector(&circle), rotation.transform_vector(&normal)));
-        }
-    }
-
-    result
-}
-
-pub fn create_cube(length: f32, resolution: u32) -> Vec<Vector3<f32>> {
-    let mut vector = vec![];
-
-    for i in 0..resolution {
-        let y = map_range(i, resolution, 0.0, length);
-
-        for j in 0..resolution {
-            let x = map_range(j, resolution, 0.0, length);
-
-            for k in 0..resolution {
-                let z = map_range(k, resolution, 0.0, length);
-
-                vector.push(Vector3::new(x, y, z));
-            }
-        }
-    }
-
-    vector
-}
-
 impl Renderer {
     pub fn new(znear: f32, zfar: f32, rows: u16, cols: u16) -> Self {
         Self {
@@ -67,7 +20,7 @@ impl Renderer {
         }
     }
 
-    pub fn render_verices(&mut self, vertices: &mut Vec<Vector3<f32>>) {
+    pub fn render_vertices(&mut self, vertices: &mut Vec<Vector3<f32>>) {
         self.clear_buffer();
 
         vertices
@@ -140,4 +93,52 @@ impl Renderer {
 
         ASCII.as_bytes()[index as usize]
     }
+}
+
+pub fn map_range(i: u32, max: u32, range_start: f32, range_end: f32) -> f32 {
+    (range_end - range_start) * (i as f32 / max as f32)
+}
+
+pub fn create_toroid(hole_radius: f32, thickness_radius: f32, resolution_circumference: u32, resolution_toroid: u32) -> Vec<(Vector3<f32>, Vector3<f32>)> {
+    let mut result = vec![];
+
+    let internal_radius = Vector3::new(hole_radius + thickness_radius, 0.0, 0.0);
+
+    for i in 0..resolution_toroid {
+        let theta = map_range(i, resolution_toroid, 0.0, 2.0 * std::f32::consts::PI);
+        let rotation = Rotation3::from_axis_angle(&Vector3::y_axis(), theta);
+
+        let rotated = rotation.transform_vector(&internal_radius);
+
+        for j in 0..resolution_circumference {
+            let phi = map_range(j, resolution_circumference, 0.0, 2.0 * std::f32::consts::PI);
+            let normal = phi.sin() * Vector3::y_axis().into_inner() + phi.cos() * rotated.normalize();
+            let offset = thickness_radius * normal;
+
+            let vertex = rotated + offset;
+            result.push((vertex, normal));
+        }
+    }
+
+    result
+}
+
+pub fn create_cube(length: f32, resolution: u32) -> Vec<Vector3<f32>> {
+    let mut vector = vec![];
+
+    for i in 0..resolution {
+        let y = map_range(i, resolution, 0.0, length);
+
+        for j in 0..resolution {
+            let x = map_range(j, resolution, 0.0, length);
+
+            for k in 0..resolution {
+                let z = map_range(k, resolution, 0.0, length);
+
+                vector.push(Vector3::new(x, y, z));
+            }
+        }
+    }
+
+    vector
 }
