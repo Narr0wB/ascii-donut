@@ -122,23 +122,3 @@ pub fn create_toroid(hole_radius: f32, thickness_radius: f32, resolution_circumf
 
     result
 }
-
-pub fn create_cube(length: f32, resolution: u32) -> Vec<Vector3<f32>> {
-    let mut vector = vec![];
-
-    for i in 0..resolution {
-        let y = map_range(i, resolution, 0.0, length);
-
-        for j in 0..resolution {
-            let x = map_range(j, resolution, 0.0, length);
-
-            for k in 0..resolution {
-                let z = map_range(k, resolution, 0.0, length);
-
-                vector.push(Vector3::new(x, y, z));
-            }
-        }
-    }
-
-    vector
-}
